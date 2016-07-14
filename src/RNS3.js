@@ -2,10 +2,10 @@
  * RNS3
  */
 
-import { Request } from './Request'
-import { S3Policy } from './S3Policy'
-
 const AWS_DEFAULT_S3_HOST = 's3.amazonaws.com'
+import { Request } from './Request';
+import { S3Policy } from './S3Policy';
+import { Metadata } from './Metadata';
 
 const EXPECTED_RESPONSE_KEY_VALUE_RE = {
   key: /<Key>(.*)<\/Key>/,
@@ -35,16 +35,22 @@ export class RNS3 {
       ...options,
       key: (options.keyPrefix || '') + file.name,
       date: new Date,
-      contentType: file.type
-    }
+      contentType: file.type,
+      metadata: Metadata.generate(options)
+    });
 
     const url = `https://${options.bucket}.${options.awsUrl || AWS_DEFAULT_S3_HOST}`
     const method = "POST"
     const policy = S3Policy.generate(options)
 
+    let request = Request.create(url, method, policy);
+
+    Object.keys(options.metadata).forEach((k) => request.set(k, options.metadata[k]));
+
+    request.set('file', file);
+
     return Request.create(url, method, policy)
       .set("file", file)
       .send()
-      .then(setBodyAsParsedXML)
-  }
+      .then(setBodyAsParsedXML);
 }

@@ -73,7 +73,7 @@ const formatPolicyForRequestBody = (base64EncodedPolicy, signature, options) => 
     "X-Amz-Date": options.amzDate,
     "Policy": base64EncodedPolicy,
     "X-Amz-Signature": signature,
-    ...metadata
+    ...options.metadata
   }
 }
 

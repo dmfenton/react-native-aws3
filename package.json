@@ -1,6 +1,6 @@
 {
   "name": "@danielmyerfenton/react-native-aws3",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Pure JavaScript react native library for uploading to AWS S3",
   "author": {
     "name": "Ben Reinhart"
@@ -30,6 +30,7 @@
   "scripts": {
     "build": "babel src --out-dir lib",
     "clean": "rm -rf lib",
+    "prepublish": "yarn run clean && yarn run test && yarn run build",
     "test": "jest",
     "test-watch": "jest --watch"
   },

@@ -12,45 +12,52 @@ const EXPECTED_RESPONSE_KEY_VALUE_RE = {
   etag: /<ETag>"?([^"]*)"?<\/ETag>/,
   bucket: /<Bucket>(.*)<\/Bucket>/,
   location: /<Location>(.*)<\/Location>/,
+};
+
+function entries (o) {
+  return Object.keys(o).map(k => [k, o[k]]);
 }
 
-const entries = o =>
-  Object.keys(o).map(k => [k, o[k]])
-
-const extractResponseValues = (responseText) =>
-  entries(EXPECTED_RESPONSE_KEY_VALUE_RE).reduce((result, [key, regex]) => {
+function extractResponseValues (responseText) {
+  return entries(EXPECTED_RESPONSE_KEY_VALUE_RE).reduce((result, [key, regex]) => {
     const match = responseText.match(regex)
     return { ...result, [key]: match && match[1] }
-  }, {})
+  }, {});
+}
 
-const setBodyAsParsedXML = (response) =>
-  ({
+function setBodyAsParsedXML (response) {
+  return {
     ...response,
-    body: { postResponse: response.text == null ? null : extractResponseValues(response.text) }
-  })
+    body: {
+      postResponse: response.text == null ? null : extractResponseValues(response.text)
+    }
+  }
+}
 
 export class RNS3 {
-  static put(file, options) {
-    options = {
-      ...options,
-      key: (options.keyPrefix || '') + file.name,
+  static put(file, upload) {
+    const options = {
+      ...upload,
+      key: (upload.keyPrefix || '') + file.name,
       date: new Date,
-      contentType: file.type,
-      metadata: Metadata.generate(options)
-    });
+      contentType: file.type
+    };
 
-    const url = `https://${options.bucket}.${options.awsUrl || AWS_DEFAULT_S3_HOST}`
-    const method = "POST"
-    const policy = S3Policy.generate(options)
+    if (upload.metadata) options.metadata = Metadata.generate(upload);
 
-    let request = Request.create(url, method, policy);
+    const url = `https://${options.bucket}.${options.awsUrl || AWS_DEFAULT_S3_HOST}`;
+    const method = 'POST';
+    const policy = S3Policy.generate(options);
 
-    Object.keys(options.metadata).forEach((k) => request.set(k, options.metadata[k]));
+    const request = Request.create(url, method, policy);
 
-    request.set('file', file);
+    if (options.metadata) {
+      Object.keys(options.metadata).forEach((k) => request.set(k, options.metadata[k]));
+    }
 
-    return Request.create(url, method, policy)
-      .set("file", file)
+    return request
+      .set('file', file)
       .send()
       .then(setBodyAsParsedXML);
+  }
 }

@@ -132,10 +132,12 @@ const formatPolicyForEncoding = (policy) => {
     ]
   }
 
-  Object.keys(policy.metadata).forEach((k) => {
-    let metadata = String(policy.metadata[k])
-    policyForEncoding.conditions.push({[k]: metadata});
-  })
+  if (policy.metdata) {
+    Object.keys(policy.metadata).forEach((k) => {
+      let metadata = String(policy.metadata[k])
+      policyForEncoding.conditions.push({[k]: metadata});
+    })
+  }
 
   return policyForEncoding;
 }
